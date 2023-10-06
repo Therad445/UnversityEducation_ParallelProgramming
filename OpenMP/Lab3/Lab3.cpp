@@ -15,7 +15,7 @@
 #include <vector>
 #include <ctime>
 
-double function_maxSum_openMP(const std::vector<int>& A, const std::vector<int>& B, int N)
+double function_maxSum_atomic(const std::vector<int>& A, const std::vector<int>& B, int N)
 {
 	int maxSum = 0;
 #pragma omp for private(i,j,sum) reduction(+:maxSum)
@@ -46,24 +46,21 @@ int main()
 	int N = 100;
 	std::vector<int> A(N);
 	std::vector<int> B(N);
-
 	srand(time(0));
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) 
+	{
 		A[i] = rand();
 		B[i] = rand();
 	}
-
 	double starttime = omp_get_wtime();
-	int result_function_openMP = function_maxSum_openMP(A, B, N);
+	int result_function_openMP = function_maxSum_atomic(A, B, N);
 	double end_time_openMP = omp_get_wtime();
 	double result_time_openMP = end_time_openMP - starttime;
-
-	std::cout << "Результат функции с использованием OpenMP: " << result_function_openMP << std::endl;
-	std::cout << "Задача выполнена за время с использованием OpenMP: " << result_time_openMP << std::endl;
-
 	int result_function_noOpenMP = function_maxSum_noOpenMP(A, B, N);
 	double end_time_noOpenMP = omp_get_wtime();
 	double result_time_noOpenMP = end_time_noOpenMP - end_time_openMP;
+	std::cout << "Результат функции с использованием OpenMP: " << result_function_openMP << std::endl;
+	std::cout << "Задача выполнена за время с использованием OpenMP: " << result_time_openMP << std::endl;
 	std::cout << "Результат функции с использованием OpenMP: " << result_function_openMP << std::endl;
 	std::cout << "Задача выполнена за время без использованием OpenMP: " << result_time_noOpenMP << std::endl;
 	std::cout << "С OpenMP задача выполняется в раз быстрее: " << result_time_noOpenMP / result_time_openMP << std::endl;
