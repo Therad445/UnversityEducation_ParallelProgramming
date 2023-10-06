@@ -15,7 +15,7 @@
 #include <vector>
 #include <ctime>
 
-double function_maxSum_atomic(const std::vector<int>& A, const std::vector<int>& B, int N)
+double function_maxSum_openMP(const std::vector<int>& A, const std::vector<int>& B, int N)
 {
 	int maxSum = 0;
 #pragma omp for private(i,j,sum) reduction(+:maxSum)
@@ -53,7 +53,7 @@ int main()
 		B[i] = rand();
 	}
 	double starttime = omp_get_wtime();
-	int result_function_openMP = function_maxSum_atomic(A, B, N);
+	int result_function_openMP = function_maxSum_openMP(A, B, N);
 	double end_time_openMP = omp_get_wtime();
 	double result_time_openMP = end_time_openMP - starttime;
 	int result_function_noOpenMP = function_maxSum_noOpenMP(A, B, N);

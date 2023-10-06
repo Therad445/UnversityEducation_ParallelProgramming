@@ -2,19 +2,86 @@
 //
 
 #include <iostream>
+#include <omp.h>
+#include <vector>
+#include <ctime>
+
+// Define a semaphore variable
+omp_lock_t semaphore;
+
+double function_maxSum_semaphore(const std::vector<int>& A, const std::vector<int>& B, int N)
+{
+    int maxSum = 0;
+
+#pragma omp parallel shared(maxSum, A, B, N)
+    {
+        int localMaxSum = 0;
+
+#pragma omp for
+        for (int i = 0; i < N; i++)
+        {
+            int value = std::max(A[i] + B[i], 4 * A[i] - B[i]);
+            if (value > 1)
+                localMaxSum += value;
+        }
+
+        // Use semaphore to update maxSum
+        omp_set_lock(&semaphore);
+        maxSum += localMaxSum;
+        omp_unset_lock(&semaphore);
+    }
+
+    return maxSum;
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    setlocale(LC_ALL, "Russian");
+    int N = 100;
+    std::vector<int> A(N);
+    std::vector<int> B(N);
+    srand(time(0));
+    for (int i = 0; i < N; i++)
+    {
+        A[i] = rand();
+        B[i] = rand();
+    }
+
+    // Initialize the semaphore
+    omp_init_lock(&semaphore);
+
+    double starttime = omp_get_wtime();
+    int result_function_semaphore = function_maxSum_semaphore(A, B, N);
+    double end_time_semaphore = omp_get_wtime();
+
+    // Destroy the semaphore
+    omp_destroy_lock(&semaphore);
+
+    double result_time_semaphore = end_time_semaphore - starttime;
+
+    std::cout << "Результат функции с использованием Semaphore: " << result_function_semaphore << std::endl;
+    std::cout << "Задача выполнена за время с использованием Semaphore: " << result_time_semaphore << std::endl;
+
+    return 0;
 }
 
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
+//#pragma omp parallel shared(maxSum, A, B, N)
+//{
+//    int localMaxSum = 0;
+//
+//#pragma omp for
+//    for (int i = 0; i < N; i++)
+//    {
+//        int value = std::max(A[i] + B[i], 4 * A[i] - B[i]);
+//        if (value > 1)
+//            localMaxSum += value;
+//    }
+//
+//    // Barrier synchronization
+//#pragma omp barrier
+//
+//// Use semaphore to update maxSum
+//    omp_set_lock(&semaphore);
+//    maxSum += localMaxSum;
+//    omp_unset_lock(&semaphore);
+//}
