@@ -15,73 +15,49 @@
 
 using namespace std;
 
-int arr1[10000][10000]; // двумерный массив
-int arr2[10000][10000]; // двумерный массив
-int i, j, N, M; // счётчики и размеры матрицы
-int outR1; // Счётчик вывода
-int outR2; // Счётчик вывода
-
-
+const int NMAX = 100;
 int main()
 {
-    unsigned int start_time = clock(); // начальное время
-    srand(time(0)); // автоматическая рандомизация
+	setlocale(LC_ALL, "Russian");
+	int arr[NMAX][NMAX]; // двумерный массив
+	int i, j; // счётчики и размеры матрицы
+	int out_OpenMP = 0; // Счётчик вывода
+	int out_NoOpenMP = 0; // Счётчик вывода
+	srand(time(0)); // автоматическая рандомизация
+	for (i = 0; i < NMAX; i++) {
+		for (j = 0; j < NMAX; j++) {
+			arr[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
+		}
+	}
 
-    cin >> N; cin >> M; // вводим размеры NxM
+	unsigned int start_time = clock(); // начальное время
+#pragma omp parallel shared(arr) private(i)
+	{
+#pragma omp for shared(out_OpenMP) private(i) 
+		{
+			for (i = 0; i < NMAX; i += 1) {
+				for (j = 0; j < NMAX; j += 2) {
+					if (arr[i][j] + arr[i][j + 1] == 7)
+						out_OpenMP += 1;
+				}
+			}
+		}
+	}
+	cout << "Сумма единиц: " << out_OpenMP;  //вывод счётчика
+	cout << endl;
+	unsigned int end_time_OpenMP = clock(); // конечное время OpenMP
+	unsigned int search_time_OpenMP = end_time_OpenMP - start_time; // искомое время OpenMP
+	cout << "Задача выполнена с использованием OpenMP: " << search_time_OpenMP << endl;
 
-    {
-
-
-        for (i = 0; i < N; i++) {
-            for (j = 0; j < M; j++) {
-                arr1[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
-            }
-        }
-
-
-#pragma omp parallel shared(a) private(i) 
-        {
-#pragma omp for private(i,arr) 
-            {
-                for (i = 0; i < N; i += 1) {
-                    for (j = 0; j < M; j += 2) {
-                        if (arr1[i][j] + arr1[i][j + 1] == 7)
-                            outR1 += 1;
-                    }
-                }
-            }
-        }
-        cout << "Сумма единиц: " << outR1;  //вывод счётчика
-        cout << endl;
-
-        unsigned int end_time = clock(); // конечное время
-        unsigned int search_time = end_time - start_time; // искомое время
-
-        cout << "Задача выполнена с использованием OpenMP: " << search_time;
-        cout << endl;
-    }
-    {
-
-
-        for (i = 0; i < N; i++) {
-            for (j = 0; j < M; j++) {
-                arr2[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
-            }
-        }
-            }
 	for (i = 0; i < NMAX; i += 1) {
 		for (j = 0; j < NMAX; j += 2) {
 			if (arr[i][j] + arr[i][j + 1] == 7)
 				out_NoOpenMP += 1;
-        }
-
-
-        cout << "Сумма единиц: " << outR2;  //вывод счётчика
-        cout << endl;
-
-        unsigned int end_time = clock(); // конечное время
-        unsigned int search_time = end_time - start_time; // искомое время
-
-        cout << "Задача выполнена без использования OpenMP: " << search_time;
-    }
+		}
+	}
+	cout << "Сумма единиц: " << out_NoOpenMP << endl;  //вывод счётчика
+	unsigned int end_time_NoOpenMP = clock(); // конечное время
+	unsigned int search_time_NoOpenMP = end_time_NoOpenMP - end_time_OpenMP; // искомое время
+	cout << "Задача выполнена без использования OpenMP: " << search_time_NoOpenMP;
+	return 0;
 }
