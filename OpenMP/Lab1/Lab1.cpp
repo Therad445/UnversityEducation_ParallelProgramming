@@ -68,13 +68,11 @@ int main()
                 arr2[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
             }
         }
-
-
-        for (i = 0; i < N; i += 1) {
-            for (j = 0; j < M; j += 2) {
-                if (arr2[i][j] + arr2[i][j + 1] == 7)
-                    outR2 += 1;
             }
+	for (i = 0; i < NMAX; i += 1) {
+		for (j = 0; j < NMAX; j += 2) {
+			if (arr[i][j] + arr[i][j + 1] == 7)
+				out_NoOpenMP += 1;
         }
 
 
