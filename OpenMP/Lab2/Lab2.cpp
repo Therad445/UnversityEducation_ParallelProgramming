@@ -15,54 +15,41 @@ using namespace std;
 const int NMAX = 300;
 const int LIMIT = 400;
 
-int main()
+class Matrix
 {
-	setlocale(LC_ALL, "Russian");
-
-	unsigned int start_time1 = clock(); // начальное время
-	srand(time(0)); // автоматическая рандомизация
-
+	int* data;
+	int size;
+public:
+	Matrix(int matSize)
 	{
-		int i, j;
-		float sum;
-		float a[NMAX][NMAX];
+		size = matSize;
+		data = new int[size * size];
+	}
+	~Matrix()
+	{
+	}
+	int* operator[](int row)
+	{
+		return data + row * size;
+	}
+};
 
-		for (i = 0; i < NMAX; i++)
-			for (j = 0; j < NMAX; j++)
-				a[i][j] = i + j;
+void function_openMP(Matrix a)
+{
+	int i, j;
+	float sum;
 
-		#pragma omp parallel shared(a) if (NMAX>LIMIT)
+	for (i = 0; i < NMAX; i++)
+	{
+		for (j = 0; j < NMAX; j++)
 		{
-		#pragma omp for private(i,j,sum) 
-			for (i = 0; i < NMAX; i++)
-			{
-				sum = 0;
-				for (j = 0; j < NMAX; j++)
-					sum += a[i][j];
-				printf("Сумма элементов строки %d равна %f\n", i, sum);
-			}
+			a[i][j] = i + j;
 		}
 	}
 
-	unsigned int end_time1 = clock(); // конечное время
-	unsigned int search_time1 = end_time1 - start_time1; // искомое время
-
-	//cout << "Задача выполнена с использованием OpenMP: " << search_time1;
-	//cout << endl;
-
-
-	unsigned int start_time2 = clock(); // начальное время
-	srand(time(0)); // автоматическая рандомизация
-
+#pragma omp parallel shared(a) if (NMAX>LIMIT)
 	{
-	int i, j;
-	float sum;
-	float a[NMAX][NMAX];
-
-	for (i = 0; i < NMAX; i++)
-		for (j = 0; j < NMAX; j++)
-			a[i][j] = i + j;
-
+#pragma omp for private(i,j,sum) 
 		for (i = 0; i < NMAX; i++)
 		{
 			sum = 0;
@@ -70,18 +57,47 @@ int main()
 				sum += a[i][j];
 			printf("Сумма элементов строки %d равна %f\n", i, sum);
 		}
+	}
+}
 
-	unsigned int end_time2 = clock(); // конечное время
-	unsigned int search_time2 = end_time2 - start_time2; // искомое время
+void function_noOpenMP(Matrix a)
+{
+	int i, j;
+	float sum;
+	
 
-	cout << "Задача выполнена с использованием OpenMP: " << search_time1;
-	cout << endl;
-
-	cout << "Задача выполнена без использованием OpenMP: " << search_time2;
-	cout << endl;
+	for (i = 0; i < NMAX; i++)
+	{
+		for (j = 0; j < NMAX; j++)
+		{
+			a[i][j] = i + j;
+		}
 	}
 
+	for (i = 0; i < NMAX; i++)
+	{
+		sum = 0;
+		for (j = 0; j < NMAX; j++)
+			sum += a[i][j];
+		printf("Сумма элементов строки %d равна %f\n", i, sum);
+	}
+}
+
+int main()
+{
+	setlocale(LC_ALL, "Russian");
+	Matrix a(NMAX);
+	double start_time_openMP = omp_get_wtime(); // начальное время
+	cout << "Сумма единиц: " << function_openMP(a) << endl;  //вывод счётчика
+	double  end_time_OpenMP = omp_get_wtime(); // конечное время OpenMP
+	cout << "Задача выполнена с использованием OpenMP: " << double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC << endl; // искомое время OpenMP
+
+	double start_time_NoOpenMP = clock(); // конечное время
+	cout << "Сумма единиц: " << function_noOpenMP(a) << endl;  //вывод счётчика
+	double end_time_NoOpenMP = clock(); // конечное время
+	cout << "Задача выполнена без использования OpenMP: " << double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC << endl; // искомое время
+	cout << "С OpenMP задача выполняется в раз быстрее: " << (double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC) / (double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC) << endl;
+
+
 	return 0;
-
-
 }

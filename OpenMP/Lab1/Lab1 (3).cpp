@@ -15,37 +15,19 @@
 
 using namespace std;
 
-const int NMAX = 10000;
+const int NMAX = 1;
 
-class Matrix
-{
-	int* data;
-	int size;
-public:
-	Matrix(int matSize)
-	{
-		size = matSize;
-		data = new int[size * size];
-	}
-	~Matrix()
-	{
-	}
-	int* operator[](int row)
-	{
-		return data + row * size;
-	}
-};
 
-int function_openMP(Matrix arrs)
+int function_openMP(int** arr)
 {
-#pragma omp parallel shared(arrs) private(i)
+#pragma omp parallel shared(arr) private(i)
 	int out = 0; // Счётчик вывода
 	{
 #pragma omp for shared(out) private(i) 
 		{
 			for (int i = 0; i < NMAX; i += 1) {
 				for (int j = 0; j < NMAX; j += 2) {
-					if (arrs[i][j] + arrs[i][j + 1] == 7)
+					if (arr[i][j] + arr[i][j + 1] == 7)
 						out += 1;
 				}
 			}
@@ -54,12 +36,12 @@ int function_openMP(Matrix arrs)
 	return out;
 }
 
-int function_noOpenMP(Matrix arrs)
+int function_noOpenMP(int** arr)
 {
 	int out = 0; // Счётчик вывода
 	for (int i = 0; i < NMAX; i += 1) {
 		for (int j = 0; j < NMAX; j += 2) {
-			if (arrs[i][j] + arrs[i][j + 1] == 7)
+			if (arr[i][j] + arr[i][j + 1] == 7)
 				out += 1;
 		}
 	}
@@ -69,23 +51,37 @@ int function_noOpenMP(Matrix arrs)
 int main()
 {
 	setlocale(LC_ALL, "Russian");
+
+	int** dinamic_array2 = new int* [NMAX];   // создаем 
+	for (int i = 0; i < NMAX; i++) {          // двумерный
+		dinamic_array2[i] = new int[i + 1]; // массив 
+	}                                      // !
+
 	srand(time(0)); // автоматическая рандомизация
-	Matrix arr(NMAX);
 	for (int i = 0; i < NMAX; i++) {
 		for (int j = 0; j < NMAX; j++) {
-			arr[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
+			dinamic_array2[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
 		}
 	}
-	omp_set_num_threads(10000);
-	double start_time_openMP = omp_get_wtime(); // начальное время
-	cout << "Сумма единиц: " << function_openMP(arr) << endl;  //вывод счётчика
-	double  end_time_OpenMP = omp_get_wtime(); // конечное время OpenMP
-	cout << "Задача выполнена с использованием OpenMP: " << double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC << endl; // искомое время OpenMP
 
-	double start_time_NoOpenMP = clock(); // конечное время
-	cout << "Сумма единиц: " << function_noOpenMP(arr) << endl;  //вывод счётчика
-	double end_time_NoOpenMP = clock(); // конечное время
-	cout << "Задача выполнена без использования OpenMP: " << double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC  << endl; // искомое время
-	cout << "С OpenMP задача выполняется в раз быстрее: " << (double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC) / (double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC) << endl;
+	//printf(dinamic_array2);
+
+	unsigned int start_time_openMP = clock(); // начальное время
+	cout << "Сумма единиц: " << function_openMP(dinamic_array2) << endl;  //вывод счётчика
+	unsigned int end_time_OpenMP = clock(); // конечное время OpenMP
+	unsigned int search_time_OpenMP = end_time_OpenMP - start_time_openMP; // искомое время OpenMP
+	cout << "Задача выполнена с использованием OpenMP: " << search_time_OpenMP << endl;
+	for (int i = 0; i < NMAX; i++) {
+		delete[] dinamic_array2[i];  // удаляем массив
+	}
+	//unsigned int start_time_NoOpenMP = clock(); // конечное время
+	//cout << "Сумма единиц: " << function_noOpenMP(dinamic_array2) << endl;  //вывод счётчика
+	//unsigned int end_time_NoOpenMP = clock(); // конечное время
+	//unsigned int search_time_NoOpenMP = end_time_NoOpenMP - start_time_NoOpenMP; // искомое время
+	//cout << "Задача выполнена без использования OpenMP: " << search_time_NoOpenMP;
+
+
+	
+
 	return 0;
 }
