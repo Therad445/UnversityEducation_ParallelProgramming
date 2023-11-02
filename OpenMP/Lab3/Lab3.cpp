@@ -8,62 +8,75 @@
 // Задание 2. Модифицировать программу, составленную по Заданию 1, убрав возможность параллельного использования вычислительных ресурсов. Измерять время работы программы для тех же значений параметров, что были использованы при выполнении Задания 1. Результаты сравнить и занести в отчёт.
 
 
-
-
-#include <iostream>
 #include <omp.h>
-#include <vector>
-#include <ctime>
+#include <iostream>
+#include <locale.h>
 
-double function_maxSum_openMP(const std::vector<int>& A, const std::vector<int>& B, int N)
-{
-	int maxSum = 0;
-#pragma omp for private(i,j,sum) reduction(+:maxSum)
-	for (int i = 0; i < N; i++)
-	{
-		int value = std::max(A[i] + B[i], 4 * A[i] - B[i]);
-		if (value > 1)
-			maxSum += value;
-	}
-	return maxSum;
+const int n = 500;
+
+void init_rand(int* a) {
+    for (int i = 0; i < n; i++) {
+            a[i] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
+        //std::cout << std::endl;
+    }
 }
 
-double function_maxSum_noOpenMP(const std::vector<int>& A, const std::vector<int>& B, int N)
-{
-	int maxSum = 0;
-	for (int i = 0; i < N; i++)
-	{
-		int value = std::max(A[i] + B[i], 4 * A[i] - B[i]);
-		if (value > 1)
-			maxSum += value;
-	}
-	return maxSum;
+void show_matrix(int* a) {
+    for (int i = 0; i < n; i++) {
+            std::cout << a[i] << " ";
+        std::cout << std::endl;
+    }
 }
+
+void OpenMP(int a[n], int b[n]) {
+    int i;
+    int sum = 0;
+#pragma omp parallel shared(a) 
+    {
+#pragma omp for private(i) reduction(+:sum)
+        for (i = 0; i < n; i++)
+        {
+            int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
+            if (value > 1)
+                sum += value;
+        }
+    } /* Завершение параллельного фрагмента */
+    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+}
+
+void noOpenMP(int a[n], int b[n]) {
+    int i;
+    int sum= 0;
+#pragma omp parallel shared(a) 
+    {
+#pragma omp for private(i) reduction(+:sum)
+        for (i = 0; i < n; i++)
+        {
+            int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
+            if (value > 1)
+                sum += value;
+        }
+    } /* Завершение параллельного фрагмента */
+    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+}
+
+
 
 int main()
 {
-	setlocale(LC_ALL, "Russian");
-	int N = 100;
-	std::vector<int> A(N);
-	std::vector<int> B(N);
-	srand(time(0));
-	for (int i = 0; i < N; i++) 
-	{
-		A[i] = rand();
-		B[i] = rand();
-	}
-	double starttime = omp_get_wtime();
-	int result_function_openMP = function_maxSum_openMP(A, B, N);
-	double end_time_openMP = omp_get_wtime();
-	double result_time_openMP = end_time_openMP - starttime;
-	int result_function_noOpenMP = function_maxSum_noOpenMP(A, B, N);
-	double end_time_noOpenMP = omp_get_wtime();
-	double result_time_noOpenMP = end_time_noOpenMP - end_time_openMP;
-	std::cout << "Результат функции с использованием OpenMP: " << result_function_openMP << std::endl;
-	std::cout << "Задача выполнена за время с использованием OpenMP: " << result_time_openMP << std::endl;
-	std::cout << "Результат функции с использованием OpenMP: " << result_function_openMP << std::endl;
-	std::cout << "Задача выполнена за время без использованием OpenMP: " << result_time_noOpenMP << std::endl;
-	std::cout << "С OpenMP задача выполняется в раз быстрее: " << result_time_noOpenMP / result_time_openMP << std::endl;
 
-	return 0;
+    setlocale(LC_ALL, "Russian");
+    int a[n], b[n];
+    init_rand(a);
+    init_rand(b);
+    //show_matrix(a);
+    double noopenMp_start_time = omp_get_wtime();
+    noOpenMP(a,b);
+    double noopenMp_end_time = omp_get_wtime();
+    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
+    double openMp_start_time = omp_get_wtime();
+    OpenMP(a,b);
+    double openMp_end_time = omp_get_wtime();
+    std::cout << openMp_end_time - openMp_start_time << std::endl;
+    return 0;
 }
