@@ -6,7 +6,7 @@ static_assert(false, "openmp support required");
 #endif
 
 const int NMAX = 10000;
-const int LIMIT = 10000;
+const int LIMIT = 2000;
 
 
 static int** matrix_init(int n, int m)
