@@ -70,10 +70,12 @@ int main()
     init_rand(a);
     init_rand(b);
     //show_matrix(a);
+    std::cout << "Результат без OpenMP" << std::endl;
     double noopenMp_start_time = omp_get_wtime();
     noOpenMP(a,b);
     double noopenMp_end_time = omp_get_wtime();
     std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
+    std::cout << "Результат c OpenMP" << std::endl;
     double openMp_start_time = omp_get_wtime();
     OpenMP(a,b);
     double openMp_end_time = omp_get_wtime();
