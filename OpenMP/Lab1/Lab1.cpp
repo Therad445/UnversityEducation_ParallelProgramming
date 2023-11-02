@@ -9,83 +9,99 @@
 Написать программу, считающую количество семёрок в десятеричной записи числа всех попарных сумм элементов для каждой строки.
 */
 
-#include <iostream>
-#include <ctime>
 #include <omp.h>
+#include <iostream>
+#include <locale.h>
 
-using namespace std;
+const int NMAX = 5000;
 
-const int NMAX = 10000;
-
-class Matrix
+static int** matrix_init(int n, int m)
 {
-	int* data;
-	int size;
-public:
-	Matrix(int matSize)
-	{
-		size = matSize;
-		data = new int[size * size];
-	}
-	~Matrix()
-	{
-	}
-	int* operator[](int row)
-	{
-		return data + row * size;
-	}
-};
+    int** matrix;
 
-int function_openMP(Matrix arrs)
-{
-#pragma omp parallel shared(arrs) private(i)
-	int out = 0; // Счётчик вывода
-	{
-#pragma omp for shared(out) private(i) 
-		{
-			for (int i = 0; i < NMAX; i += 1) {
-				for (int j = 0; j < NMAX; j += 2) {
-					if (arrs[i][j] + arrs[i][j + 1] == 7)
-						out += 1;
-				}
-			}
-		}
-	}
-	return out;
+    matrix = new int* [n];
+    for (int i = 0; i < n; i++) {
+        matrix[i] = new int[m] {};
+    }
+
+    return matrix;
 }
 
-int function_noOpenMP(Matrix arrs)
-{
-	int out = 0; // Счётчик вывода
-	for (int i = 0; i < NMAX; i += 1) {
-		for (int j = 0; j < NMAX; j += 2) {
-			if (arrs[i][j] + arrs[i][j + 1] == 7)
-				out += 1;
-		}
-	}
-	return out;
+void init_rand(int** a) {
+    for (int i = 0; i < NMAX; i++) {
+        for (int j = 0; j < NMAX; j++) {
+            a[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
+        }
+        //std::cout << std::endl;
+    }
 }
+
+void show_matrix(int** a) {
+    for (int i = 0; i < NMAX; i++) {
+        for (int j = 0; j < NMAX; j++) {
+            std::cout << a[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void OpenMP(int** a) {
+    int i, j;
+    float sum;
+#pragma omp parallel shared(a) private(i)
+    {
+#pragma omp for private(j,sum)
+        for (i = 0; i < NMAX; i++)
+        {
+            sum = 0;
+            for (j = 0; j < NMAX; j++) {
+                if (j + 1 == NMAX)
+                    continue;
+                if (a[i][j] + a[i][j + 1] == 7) {
+                    sum += 1;
+                    //std::cout << a[i][j] << " " << a[i][j + 1] << std::endl;
+                }
+            }
+            //printf("Количество сёмерок в строке %d всех попарных сумм элементов равна %f\n", i, sum);
+        }
+    } /* Завершение параллельного фрагмента */
+}
+
+void noOpenMP(int** a) {
+    int i, j;
+    float sum;
+    for (i = 0; i < NMAX; i++)
+    {
+        sum = 0;
+        for (j = 0; j < NMAX; j++) {
+            if (j + 1 == NMAX)
+                continue;
+            if (a[i][j] + a[i][j + 1] == 7) {
+                sum += 1;
+                //std::cout << a[i][j] << " " << a[i][j + 1] << std::endl;
+            }
+        }
+        //printf("Количество сёмерок в строке %d всех попарных сумм элементов равна %f\n", i, sum);
+    }
+} /* Завершение параллельного фрагмента */
+
+
 
 int main()
 {
-	setlocale(LC_ALL, "Russian");
-	srand(time(0)); // автоматическая рандомизация
-	Matrix arr(NMAX);
-	for (int i = 0; i < NMAX; i++) {
-		for (int j = 0; j < NMAX; j++) {
-			arr[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
-		}
-	}
-	omp_set_num_threads(10000);
-	double start_time_openMP = omp_get_wtime(); // начальное время
-	cout << "Сумма единиц: " << function_openMP(arr) << endl;  //вывод счётчика
-	double  end_time_OpenMP = omp_get_wtime(); // конечное время OpenMP
-	cout << "Задача выполнена с использованием OpenMP: " << double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC << endl; // искомое время OpenMP
 
-	double start_time_NoOpenMP = clock(); // конечное время
-	cout << "Сумма единиц: " << function_noOpenMP(arr) << endl;  //вывод счётчика
-	double end_time_NoOpenMP = clock(); // конечное время
-	cout << "Задача выполнена без использования OpenMP: " << double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC  << endl; // искомое время
-	cout << "С OpenMP задача выполняется в раз быстрее: " << (double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC) / (double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC) << endl;
-	return 0;
+    setlocale(LC_ALL, "Russian");
+    int** a;
+    a = matrix_init(NMAX, NMAX);
+    init_rand(a);
+    //show_matrix(a);
+    double noopenMp_start_time = omp_get_wtime();
+    noOpenMP(a);
+    double noopenMp_end_time = omp_get_wtime();
+    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
+    double openMp_start_time = omp_get_wtime();
+    OpenMP(a);
+    double openMp_end_time = omp_get_wtime();
+    std::cout << openMp_end_time - openMp_start_time << std::endl;
+    return 0;
 }

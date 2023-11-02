@@ -1,103 +1,78 @@
-﻿// Lab2.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
-/*
-Задание. Выполнить Пример для различных значений параметров NMAX и LIMIT, замеряя время выполнения, результаты занести в отчет. Выделить такие NMAX при LIMIT, при которых совпадает время выполнения многопоточной программы и однопоточной.
-*/
-
+﻿#include <omp.h>
 #include <iostream>
-#include <ctime>
-#include <omp.h>
-#include <stdio.h>
+#include <locale.h>
+#ifndef _OPENMP
+static_assert(false, "openmp support required");
+#endif
 
-using namespace std;
+const int NMAX = 10000;
+const int LIMIT = 10000;
 
-const int NMAX = 300;
-const int LIMIT = 400;
 
-class Matrix
+static int** matrix_init(int n, int m)
 {
-	int* data;
-	int size;
-public:
-	Matrix(int matSize)
-	{
-		size = matSize;
-		data = new int[size * size];
-	}
-	~Matrix()
-	{
-	}
-	int* operator[](int row)
-	{
-		return data + row * size;
-	}
-};
+    int** matrix;
 
-void function_openMP(Matrix a)
-{
-	int i, j;
-	float sum;
+    matrix = new int* [n];
+    for (int i = 0; i < n; i++) {
+        matrix[i] = new int[m] {};
+    }
 
-	for (i = 0; i < NMAX; i++)
-	{
-		for (j = 0; j < NMAX; j++)
-		{
-			a[i][j] = i + j;
-		}
-	}
-
-#pragma omp parallel shared(a) if (NMAX>LIMIT)
-	{
-#pragma omp for private(i,j,sum) 
-		for (i = 0; i < NMAX; i++)
-		{
-			sum = 0;
-			for (j = 0; j < NMAX; j++)
-				sum += a[i][j];
-			printf("Сумма элементов строки %d равна %f\n", i, sum);
-		}
-	}
+    return matrix;
 }
 
-void function_noOpenMP(Matrix a)
-{
-	int i, j;
-	float sum;
-	
-
-	for (i = 0; i < NMAX; i++)
-	{
-		for (j = 0; j < NMAX; j++)
-		{
-			a[i][j] = i + j;
-		}
-	}
-
-	for (i = 0; i < NMAX; i++)
-	{
-		sum = 0;
-		for (j = 0; j < NMAX; j++)
-			sum += a[i][j];
-		printf("Сумма элементов строки %d равна %f\n", i, sum);
-	}
+void init_rand(int** a) {
+    for (int i = 0; i < NMAX; i++) {
+        for (int j = 0; j < NMAX; j++) {
+            a[i][j] = rand() % 10;    //запись в матрицу случайных чисел от 1 до 9
+        }
+        //std::cout << std::endl;
+    }
 }
+
+void show_matrix(int** a) {
+    for (int i = 0; i < NMAX; i++) {
+        for (int j = 0; j < NMAX; j++) {
+            std::cout << a[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void OpenMP(int** a) {
+    int i, j;
+    float sum;
+#pragma omp parallel shared(a) private(i) if (NMAX>LIMIT)
+    {
+#pragma omp for private(j,sum)
+        for (i = 0; i < NMAX; i++)
+        {
+            sum = 0;
+            for (j = 0; j < NMAX; j++) {
+                if (j + 1 == NMAX)
+                    continue;
+                if (a[i][j] + a[i][j + 1] == 7) {
+                    sum += 1;
+                    //std::cout << a[i][j] << " " << a[i][j + 1] << std::endl;
+                }
+            }
+            //printf("Количество сёмерок в строке %d всех попарных сумм элементов равна %f\n", i, sum);
+        }
+    } /* Завершение параллельного фрагмента */
+}
+
 
 int main()
 {
-	setlocale(LC_ALL, "Russian");
-	Matrix a(NMAX);
-	double start_time_openMP = omp_get_wtime(); // начальное время
-	cout << "Сумма единиц: " << function_openMP(a) << endl;  //вывод счётчика
-	double  end_time_OpenMP = omp_get_wtime(); // конечное время OpenMP
-	cout << "Задача выполнена с использованием OpenMP: " << double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC << endl; // искомое время OpenMP
 
-	double start_time_NoOpenMP = clock(); // конечное время
-	cout << "Сумма единиц: " << function_noOpenMP(a) << endl;  //вывод счётчика
-	double end_time_NoOpenMP = clock(); // конечное время
-	cout << "Задача выполнена без использования OpenMP: " << double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC << endl; // искомое время
-	cout << "С OpenMP задача выполняется в раз быстрее: " << (double(end_time_NoOpenMP - start_time_NoOpenMP) / CLOCKS_PER_SEC) / (double(end_time_OpenMP - start_time_openMP) / CLOCKS_PER_SEC) << endl;
-
-
-	return 0;
+    setlocale(LC_ALL, "Russian");
+    int** a;
+    a = matrix_init(NMAX, NMAX);
+    init_rand(a);
+    //show_matrix(a);
+    double openMp_start_time = omp_get_wtime();
+    OpenMP(a);
+    double openMp_end_time = omp_get_wtime();
+    std::cout << openMp_end_time - openMp_start_time << std::endl;
+    return 0;
 }
