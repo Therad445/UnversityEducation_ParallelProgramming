@@ -31,7 +31,7 @@ void show_matrix(int* a) {
 void OpenMP(int a[n], int b[n]) {
     int i;
     int sum = 0;
-#pragma omp parallel shared(a) 
+#pragma omp parallel shared(a,b) 
     {
 #pragma omp for private(i) reduction(+:sum)
         for (i = 0; i < n; i++)
@@ -46,10 +46,10 @@ void OpenMP(int a[n], int b[n]) {
 
 void noOpenMP(int a[n], int b[n]) {
     int i;
-    int sum= 0;
-#pragma omp parallel shared(a) 
+    int sum = 0;
+#pragma omp parallel shared(a,b,sum) 
     {
-#pragma omp for private(i) reduction(+:sum)
+#pragma omp for private(i)
         for (i = 0; i < n; i++)
         {
             int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
@@ -70,15 +70,15 @@ int main()
     init_rand(a);
     init_rand(b);
     //show_matrix(a);
-    std::cout << "Результат без OpenMP" << std::endl;
-    double noopenMp_start_time = omp_get_wtime();
-    noOpenMP(a,b);
-    double noopenMp_end_time = omp_get_wtime();
-    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
     std::cout << "Результат c OpenMP" << std::endl;
     double openMp_start_time = omp_get_wtime();
     OpenMP(a,b);
     double openMp_end_time = omp_get_wtime();
     std::cout << openMp_end_time - openMp_start_time << std::endl;
+    std::cout << "Результат без OpenMP" << std::endl;
+    double noopenMp_start_time = omp_get_wtime();
+    noOpenMP(a, b);
+    double noopenMp_end_time = omp_get_wtime();
+    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
     return 0;
 }
