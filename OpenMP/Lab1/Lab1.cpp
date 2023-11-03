@@ -36,6 +36,15 @@ void init_rand(int** a) {
     }
 }
 
+static void matrix_destroy(int** matrix)
+{
+    for (int i = 0; i < NMAX; i++) {
+        delete[] matrix[i];
+    }
+
+    delete[] matrix;
+}
+
 void show_matrix(int** a) {
     for (int i = 0; i < NMAX; i++) {
         for (int j = 0; j < NMAX; j++) {
@@ -105,5 +114,6 @@ int main()
     OpenMP(a);
     double openMp_end_time = omp_get_wtime();
     std::cout << openMp_end_time - openMp_start_time << std::endl;
+    matrix_destroy(a);
     return 0;
 }

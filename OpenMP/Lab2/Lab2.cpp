@@ -1,9 +1,6 @@
 ﻿#include <omp.h>
 #include <iostream>
 #include <locale.h>
-#ifndef _OPENMP
-static_assert(false, "openmp support required");
-#endif
 
 const int NMAX = 10000;
 const int LIMIT = 2000;
@@ -37,6 +34,15 @@ void show_matrix(int** a) {
         }
         std::cout << std::endl;
     }
+}
+
+static void matrix_destroy(int** matrix)
+{
+    for (int i = 0; i < NMAX; i++) {
+        delete[] matrix[i];
+    }
+
+    delete[] matrix;
 }
 
 void OpenMP(int** a) {
@@ -74,5 +80,6 @@ int main()
     OpenMP(a);
     double openMp_end_time = omp_get_wtime();
     std::cout << openMp_end_time - openMp_start_time << std::endl;
+    matrix_destroy(a);
     return 0;
 }
