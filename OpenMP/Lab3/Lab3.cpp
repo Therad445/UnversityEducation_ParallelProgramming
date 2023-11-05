@@ -11,8 +11,9 @@
 #include <omp.h>
 #include <iostream>
 #include <locale.h>
+#include <stdlib.h>
 
-const int n = 500;
+const int n = 10000000;
 
 void init_rand(int* a) {
     for (int i = 0; i < n; i++) {
@@ -28,7 +29,7 @@ void show_matrix(int* a) {
     }
 }
 
-void OpenMP(int a[n], int b[n]) {
+void reductionOpenMP(int* a, int* b) {
     int i;
     int sum = 0;
 #pragma omp parallel shared(a,b) 
@@ -38,13 +39,13 @@ void OpenMP(int a[n], int b[n]) {
         {
             int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
             if (value > 1)
-                sum += value;
+                sum = sum + value;
         }
     } /* Завершение параллельного фрагмента */
-    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+    //printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
 }
 
-void noOpenMP(int a[n], int b[n]) {
+void OpenMP(int* a, int* b) {
     int i;
     int sum = 0;
 #pragma omp parallel shared(a,b,sum) 
@@ -57,7 +58,19 @@ void noOpenMP(int a[n], int b[n]) {
                 sum += value;
         }
     } /* Завершение параллельного фрагмента */
-    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+    //printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+}
+
+void noOpenMP(int *a, int *b) {
+    int i;
+    int sum = 0;
+        for (i = 0; i < n; i++)
+        {
+            int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
+            if (value > 1)
+                sum += value;
+        }
+    //printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
 }
 
 
@@ -66,19 +79,28 @@ int main()
 {
 
     setlocale(LC_ALL, "Russian");
-    int a[n], b[n];
+    int *a, *b;
+    a = new int[n];
+    b = new int[n];
     init_rand(a);
     init_rand(b);
     //show_matrix(a);
-    std::cout << "Результат c OpenMP" << std::endl;
-    double openMp_start_time = omp_get_wtime();
-    OpenMP(a,b);
-    double openMp_end_time = omp_get_wtime();
-    std::cout << openMp_end_time - openMp_start_time << std::endl;
     std::cout << "Результат без OpenMP" << std::endl;
     double noopenMp_start_time = omp_get_wtime();
     noOpenMP(a, b);
     double noopenMp_end_time = omp_get_wtime();
     std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
+    std::cout << "Результат c Reduction OpenMP" << std::endl;
+    double reductionOpenMp_start_time = omp_get_wtime();
+    reductionOpenMP(a, b);
+    double reductionOpenMp_end_time = omp_get_wtime();
+    std::cout << reductionOpenMp_end_time - reductionOpenMp_start_time << std::endl;
+    std::cout << "Результат c OpenMP" << std::endl;
+    double openMp_start_time = omp_get_wtime();
+    OpenMP(a, b);
+    double openMp_end_time = omp_get_wtime();
+    std::cout << openMp_end_time - openMp_start_time << std::endl;
+    delete[] a;
+    delete[] b;
     return 0;
 }

@@ -42,15 +42,15 @@ void OpenMP(int a[n], int b[n]) {
     omp_destroy_lock(&lock);
 }
 
-void noOpenMP(int a[n], int b[n]) {
+void barrierOpenMP(int a[n], int b[n]) {
     omp_lock_t lock;
     omp_init_lock(&lock);
     int i;
     int sum = 0;
 #pragma omp parallel shared(a,b, sum) 
     {
-#pragma omp for private(i)
-        for (i = 0; i < n; i++)
+#pragma omp for private(i) nowait
+        for (i = 0; i < n; i++) 
         {
             int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
             omp_set_lock(&lock);
@@ -58,6 +58,7 @@ void noOpenMP(int a[n], int b[n]) {
                 sum += value;
             omp_unset_lock(&lock);
         }
+        #pragma omp barrier
     } /* Завершение параллельного фрагмента */
     printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
     omp_destroy_lock(&lock);
@@ -76,9 +77,9 @@ int main()
     OpenMP(a, b);
     double openMp_end_time = omp_get_wtime();
     std::cout << openMp_end_time - openMp_start_time << std::endl;
-    double noopenMp_start_time = omp_get_wtime();
-    noOpenMP(a, b);
+    /*double noopenMp_start_time = omp_get_wtime();
+    barrierOpenMP(a, b);
     double noopenMp_end_time = omp_get_wtime();
-    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;
+    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;*/
     return 0;
 }

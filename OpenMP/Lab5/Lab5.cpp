@@ -1,7 +1,4 @@
-﻿// Lab5.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
-
+﻿
 #include <omp.h>
 #include <iostream>
 #include <locale.h>
@@ -22,7 +19,7 @@ void show_matrix(int* a) {
     }
 }
 
-int sun_func(int a[n], int b[n], int begin, int end) {
+int sun_func(int* a, int* b, int begin, int end) {
     int i;
     int sum = 0;
         for (i = begin; i < end; i++)
@@ -39,7 +36,9 @@ int main()
 {
 
     setlocale(LC_ALL, "Russian");
-    int a[n], b[n];
+    int* a, *b;
+    a = new int[n];
+    b = new int[n];
     init_rand(a);
     init_rand(b);
     //show_matrix(a);
@@ -67,26 +66,123 @@ int main()
     total = 0;
 #pragma omp parallel sections
     {
-        
 #pragma omp section
         {
+            int numic = omp_get_num_threads();
+            printf("Количество потоков: %i\n", numic);
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
             total += sun_func(a, b, 0, n / 4);
         }
 #pragma omp section
         {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
             total += sun_func(a, b, n / 4, n / 2);
         }
 #pragma omp section
         {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
             total += sun_func(a, b, n / 2, n / 4 * 3);
         }
 #pragma omp section
         {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
             total += sun_func(a, b, n / 4 * 3, n);
         }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
+#pragma omp section
+        {
+            int num = omp_get_thread_num();
+            printf("Номер потока: %i\n", num);
+            //total += sun_func(a, b, n / 4 * 3, n);
+        }
     }
+
     printf("Сумма элементов матрицы вычесенных по условию равна %i\n", total);
     double sec4OpenMp_end_time = omp_get_wtime();
-    std::cout << sec4OpenMp_end_time - sec4OpenMp_start_time << std::endl;
+    int time_oper = sec4OpenMp_end_time - sec4OpenMp_start_time;
+    printf("Время выполнения операциии: %i\n", time_oper);
     return 0;
 }
+
+//СДеалать через printf а не через cout

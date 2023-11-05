@@ -6,7 +6,7 @@
 #include <iostream>
 #include <locale.h>
 
-const int n = 500;
+const int n = 5000000;
 
 void init_rand(int* a) {
     for (int i = 0; i < n; i++) {
@@ -22,38 +22,42 @@ void show_matrix(int* a) {
     }
 }
 
-void critical(int a[n], int b[n]) {
+void atomic(int* a, int* b) {
     int i;
     int sum = 0;
-#pragma omp parallel shared(a) 
+    int value;
+#pragma omp parallel shared(a, b, sum) 
     {
-#pragma omp for private(i) reduction(+:sum)
+#pragma omp for private(i,value)
         for (i = 0; i < n; i++)
         {
-            int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
+            value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
             if (value > 1)
 #pragma omp atomic
                 sum += value;
         }
     } /* Завершение параллельного фрагмента */
-    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+    //printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
 }
 
-void atomic(int a[n], int b[n]) {
+void critical(int* a, int* b) {
     int i;
     int sum = 0;
-#pragma omp parallel shared(a) 
+    int value;
+#pragma omp parallel shared(a,b, sum) 
     {
-#pragma omp for private(i) reduction(+:sum)
+#pragma omp for private(i,value)
         for (i = 0; i < n; i++)
         {
-            int value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
+            value = std::max(a[i] + b[i], 4 * a[i] - b[i]);
 #pragma omp critical
+            {
             if (value > 1)
                 sum += value;
+            }
         }
     } /* Завершение параллельного фрагмента */
-    printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
+    //printf("Сумма элементов матрицы вычесенных по условию равна %i\n", sum);
 }
 
 
@@ -62,16 +66,20 @@ int main()
 {
 
     setlocale(LC_ALL, "Russian");
-    int a[n], b[n];
+    int* a, * b;
+    a = new int[n];
+    b = new int[n];
     init_rand(a);
     init_rand(b);
     //show_matrix(a);
-    std::cout << "Результат с использованием atomic" << std::endl;
+    //std::cin.get();
+    //std::cout << "Результат с использованием atomic" << std::endl;
     double atomic_start_time = omp_get_wtime();
     atomic(a, b);
     double atomic_end_time = omp_get_wtime();
     std::cout << atomic_end_time - atomic_start_time << std::endl;
-    std::cout << "Результат с использованием critical" << std::endl;
+    //std::cin.get();
+    //std::cout << "Результат с использованием critical" << std::endl;
     double critical_start_time = omp_get_wtime();
     critical(a, b);
     double critical_end_time = omp_get_wtime();
