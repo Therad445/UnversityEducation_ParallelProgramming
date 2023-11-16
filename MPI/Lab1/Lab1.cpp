@@ -6,30 +6,35 @@
 //  2) если получено любое другое сообщение, то значение увеличивается на 1 и выводится сообщение об этом.
 // 
 
+#include <mpi.h>
 #include <iostream>
-#include "mpi.h"
-
+#include <cstdlib>
 
 int main(int argc, char** argv) {
-    setlocale(LC_ALL, "Russian");
-    int rank, size, value = 0;
+    int rank, size, value, num = 0;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (rank == 0) {
         // Процесс-счётчик
-        while (true) {
+        for (int i = 1; i < size; i++) {
             MPI_Recv(&value, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (value == -1) {
-                std::cout << "Текущее значение: " << value << std::endl;
-                break;
+                std::cout << "Current value: " << num << std::endl;
+                exit(value); // Завершение выполнения программы
             }
             else {
-                value++;
-                std::cout << "Значение увеличено на 1. Новое значение: " << value << std::endl;
+                num++;
+                std::cout << "Value increased by 1. New value: " << num << std::endl;
             }
         }
+    }
+    else if (rank == 5)
+    {
+        // Закрытие программы если поток 5
+        value = -1;
+        MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
     else {
         // Остальные процессы
@@ -37,88 +42,6 @@ int main(int argc, char** argv) {
         MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    MPI_Finalize();
+    MPI_Finalize(); // Завершение работы с MPI
     return 0;
 }
-
-
-//int main()
-//{
-//    // Инициализация среды параллельных вычислений MPI.
-//    MPI_Init(NULL, NULL);
-//
-//    // Получение ранга текущего процесса в группе запущенных приложений.
-//    // MPI_COMM_WORLD - коммуникатор, объединяющий все процессы параллельной программы.
-//    int rank = -1;
-//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//
-//    // Получение количества процессов в группе.
-//    int count_processes = -1;
-//    MPI_Comm_size(MPI_COMM_WORLD, &count_processes);
-//
-//    // Вывод ранга (идентификатора) текущего процесса.
-//    // Экземпляр ранга 0 дополнительно выводит 
-//    // количество процессов в группе.
-//    if (rank == 0)
-//    {
-//        std::cout
-//            << "This is - " << rank
-//            << " proccess \n"
-//            << "Number of processors - " << count_processes << "\n"
-//            << "-------------------------------\n";
-//    }
-//    else
-//    {
-//        std::cout
-//            << "This is - " << rank
-//            << " proccess \n"
-//            << "-------------------------------\n";
-//    }
-//
-//    // Завершение работы среды параллельных вычислений MPI
-//    MPI_Finalize();
-//
-//    // Приостановка консольного окна перед закрытием для 
-//    // тестирования программного кода в студии.
-//    //std::cin.get();
-//}
-
-//int main()
-//{
-//    // Инициализация среды параллельных вычислений MPI.
-//    MPI_Init(NULL, NULL);
-//
-//    // -----
-//    // Размещение программного кода параллельной программы.
-//    // -----
-//
-//    // Завершение работы среды параллельных вычислений MPI
-//    MPI_Finalize();
-//
-//    // Приостановка консольного окна перед закрытием для 
-//    // тестирования программного кода в студии.
-//    std::cin.get();
-//}
-
-//int main()
-//{
-//    setlocale(LC_ALL, "Russian");
-//    int i;
-//    while (true)
-//    {
-//        int x;
-//        printf("Введите число: \n");
-//        std::cin >> x;
-//        if (x == -1)
-//        {
-//            printf("Значение %d\n", i);
-//            break;
-//        }
-//        else
-//        {
-//            i = +1;
-//            printf("Значение увеличино на 1\n");
-//        }
-//    }
-//    return 0;
-//}
