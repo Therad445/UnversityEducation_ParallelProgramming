@@ -76,10 +76,12 @@ int main()
     double openMp_start_time = omp_get_wtime();
     OpenMP(a, b);
     double openMp_end_time = omp_get_wtime();
-    std::cout << openMp_end_time - openMp_start_time << std::endl;
-    /*double noopenMp_start_time = omp_get_wtime();
+    double time_oper1 = openMp_end_time - openMp_start_time;
+    printf("Время операции: %f\n", time_oper1);
+    double noopenMp_start_time = omp_get_wtime();
     barrierOpenMP(a, b);
     double noopenMp_end_time = omp_get_wtime();
-    std::cout << noopenMp_end_time - noopenMp_start_time << std::endl;*/
+    double time_oper2 = noopenMp_end_time - noopenMp_start_time;
+    printf("Время операции: %f\n", time_oper2);
     return 0;
 }
